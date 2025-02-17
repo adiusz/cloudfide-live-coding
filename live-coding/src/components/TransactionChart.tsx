@@ -1,34 +1,30 @@
 "use client";
 
 import ReactECharts from "echarts-for-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { getLatestTrades, TradeData } from "@/actions";
 import { useEffect, useState } from "react";
 
 const TransactionChart = () => {
 
-  const { data, refetch, isLoading, error } = useQuery({
+  const { data, refetch, isLoading, isRefetching, error }: UseQueryResult<TradeData[], Error>  = useQuery({
     queryKey: ["tradeData"],
     queryFn: getLatestTrades
   });
 
-  const [chartData, setChartData] = useState<TradeData[] | []>([]);
   const [chartOptions, setChartOptions] = useState<{}>({});
-
-  console.log("🐮 chartData: ", chartData)
 
   useEffect(() => {
     if (data) {
-      setChartData(data);
       setChartOptions({
         title: {
-          left: 'center',
-          text: 'BTH-ETH price'
+          left: "center",
+          text: "BTH-ETH price"
         },
         toolbox: {
           feature: {
             dataZoom: {
-              yAxisIndex: 'none'
+              yAxisIndex: "none"
             },
             restore: {},
             saveAsImage: {}
@@ -36,7 +32,7 @@ const TransactionChart = () => {
         },
         dataZoom: [
           {
-            type: 'inside',
+            type: "inside",
             start: 0,
             end: 20
           },
@@ -46,19 +42,16 @@ const TransactionChart = () => {
           }
         ],
         tooltip: {
-          trigger: 'axis',
-          position: function (pt: any) {
-            return [pt[0], '10%'];
-          }
+          trigger: "axis",
         },
         xAxis: {
           type: "category",
-          data: data?.map((item: { time: string | number | Date; }) => new Date(item.time).toLocaleTimeString("en-US")),
+          data: data?.map((item: { time: string | number | Date; }) => new Date(item.time).toLocaleTimeString("en-US"))
         },
         yAxis: {
           type: "value",
           name: "Price",
-          min: Math.min(...chartData.map(item => parseFloat(item.price))),
+          min: Math.min(...data?.map(item => parseFloat(item.price)))
         },
         series: [
           {
@@ -66,20 +59,22 @@ const TransactionChart = () => {
             smooth: true,
             data: data?.map((item: { time: any; price: any; }): any => parseFloat(item.price))
           }
-        ],
-      })
+        ]
+      });
     }
   }, [data]);
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>There was an issue with getting the price data. Please try again later or contact the admin.</p>;
 
-
   return (
     <div className="mt-10">
       <ReactECharts option={chartOptions} />
-
-      <button onClick={() => refetch()}>Refetch</button>
+      <div className="flex justify-center mt-10">
+        <button className="bg-white text-black rounded-xl p-2 w-[150px]" onClick={() => refetch()}>
+          {isRefetching ? "Updating..." : "Update data"}
+        </button>
+      </div>
     </div>
   );
 };
