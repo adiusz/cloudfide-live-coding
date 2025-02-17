@@ -1,6 +1,16 @@
 "use server";
 
-export const getLatestTrades = async () => {
+export type TradeData = {
+  id: number;
+  price: string;
+  qty: string;
+  quoteQty: string;
+  time: string;
+  isBuyerMaker: boolean;
+  isBestMatch: boolean;
+}
+
+export const getLatestTrades = async (): Promise<TradeData[]> => {
   // GET /api/v3/trades
   // https://api.binance.com
   const res = await fetch("https://api.binance.com/api/v3/trades?symbol=ETHBTC");
